@@ -865,20 +865,20 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values, const S
 		const float font_size_before = values.font_size();
 		const Style::LineHeight line_height_before = values.line_height();
 
-	// The next flag is just a small optimization, if the element was just created we don't need to copy all the default values.
-	if (!values_are_default_initialized)
-	{
-		// This needs to be done in case some properties were removed and thus not in our local style anymore.
-		// If we skipped this, the old dirty value would be unmodified, instead, now it is set to its default value.
-		// Strictly speaking, we only really need to do this for the dirty, non-inherited values. However, in most
-		// cases it seems simply assigning all non-inherited values is faster than iterating the dirty properties.
-		values.CopyNonInherited(DefaultComputedValues());
-	}
+		// The next flag is just a small optimization, if the element was just created we don't need to copy all the default values.
+		if (!values_are_default_initialized)
+		{
+			// This needs to be done in case some properties were removed and thus not in our local style anymore.
+			// If we skipped this, the old dirty value would be unmodified, instead, now it is set to its default value.
+			// Strictly speaking, we only really need to do this for the dirty, non-inherited values. However, in most
+			// cases it seems simply assigning all non-inherited values is faster than iterating the dirty properties.
+			values.CopyNonInherited(DefaultComputedValues());
+		}
 
-	if (parent_values)
-		values.CopyInherited(*parent_values);
-	else if (!values_are_default_initialized)
-		values.CopyInherited(DefaultComputedValues());
+		if (parent_values)
+			values.CopyInherited(*parent_values);
+		else if (!values_are_default_initialized)
+			values.CopyInherited(DefaultComputedValues());
 
 		bool dirty_em_properties = false;
 

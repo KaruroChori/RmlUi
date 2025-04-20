@@ -277,17 +277,6 @@ bool PropertySpecification::ParsePropertyDeclaration(PropertyDictionary& diction
 
 bool PropertySpecification::ParseShorthandDeclaration(PropertyDictionary& dictionary, ShorthandId shorthand_id, const String& property_value) const
 {
-	StringList property_values;
-	if (!ParsePropertyValues(property_values, property_value, true) || property_values.size() == 0)
-		return false;
-
-	PropertyVariableTerm term;
-	if (ParsePropertyVariableTerm(term, property_values))
-	{
-		dictionary.SetDependent(shorthand_id, term);
-		return true;
-	}
-
 	// Parse as a shorthand.
 	const ShorthandDefinition* shorthand_definition = GetShorthand(shorthand_id);
 	if (!shorthand_definition)
@@ -300,6 +289,13 @@ bool PropertySpecification::ParseShorthandDeclaration(PropertyDictionary& dictio
 	ParsePropertyValues(property_values, property_value, split_option);
 	if (property_values.empty())
 		return false;
+
+	PropertyVariableTerm term;
+	if (ParsePropertyVariableTerm(term, property_values))
+	{
+		dictionary.SetDependent(shorthand_id, term);
+		return true;
+	}
 
 	// Handle the special behavior of the flex shorthand first, otherwise it acts like 'FallThrough'.
 	if (shorthand_definition->type == ShorthandType::Flex && !property_values.empty())
@@ -475,9 +471,8 @@ bool PropertySpecification::ParsePropertyVariableDeclaration(PropertyDictionary&
 		return false;
 
 	StringList property_values;
-	if (!ParsePropertyValues(property_values, property_value, true))
-		return false;
-
+	ParsePropertyValues(property_values, property_value, SplitOption::Whitespace);
+	
 	if (property_values.empty())
 		return true;
 
@@ -670,111 +665,6 @@ void PropertySpecification::ParsePropertyValues(StringList& values_list, const S
 
 	if (state == VALUE)
 		SubmitValue();
-}
-
-bool PropertySpecification::ParsePropertyVariableTerm(PropertyVariableTerm& term, StringList const& values_list) const
-{
-	bool any_var = false;
-	for (auto const& it : values_list)
-	{
-		size_t cursor = 0;
-		size_t len = it.size();
-		auto Consume = [&](char letter) {
-			if (cursor >= len || it[cursor] != letter)
-				return false;
-			cursor++;
-			return true;
-		};
-
-		size_t prev = 0;
-
-		while (cursor < len)
-		{
-			if ((cursor == 0 || Consume(' ') || Consume('(') || Consume(',')) && Consume('v') && Consume('a') && Consume('r') && Consume('(') &&
-				Consume('-') && Consume('-'))
-			{
-				// add prefix
-				if (cursor >= 6 && (cursor - 6) - prev > 0)
-				{
-					PropertyVariableTermAtom a;
-					a.variable = String();
-					a.constant = it.substr(prev, (cursor - 6) - prev);
-					term.push_back(a);
-				}
-
-				size_t nameStart = cursor - 2;
-				while (cursor != len && it[cursor] != ',' && it[cursor] != ')')
-					cursor++;
-				size_t nameEnd = cursor;
-
-				if (it[cursor] == ',')
-				{
-					cursor++;
-
-					size_t fallbackStart = cursor;
-					while (cursor != len && it[cursor] != ')')
-						cursor++;
-					size_t fallbackEnd = cursor;
-
-					if (it[cursor] == ')')
-					{
-						cursor++;
-						PropertyVariableTermAtom a;
-						a.variable = StringUtilities::StripWhitespace(it.substr(nameStart, nameEnd - nameStart));
-						a.constant = StringUtilities::StripWhitespace(it.substr(fallbackStart, fallbackEnd - fallbackStart));
-						term.push_back(a);
-						any_var = true;
-					}
-					else
-					{
-						// parse error
-					}
-				}
-				else if (it[cursor] == ')')
-				{
-					cursor++;
-					PropertyVariableTermAtom a;
-					a.variable = StringUtilities::StripWhitespace(it.substr(nameStart, nameEnd - nameStart));
-					a.constant = String();
-					term.push_back(a);
-					any_var = true;
-				}
-				else
-				{
-					// parse error
-				}
-
-				prev = cursor;
-			}
-			else
-			{
-				++cursor;
-			}
-		}
-
-		// add leftover characters
-		if (prev < len)
-		{
-			PropertyVariableTermAtom a;
-			a.variable = String();
-			a.constant = it.substr(prev);
-			term.push_back(a);
-		}
-
-		// add space between values
-		PropertyVariableTermAtom a;
-		a.variable = String();
-		a.constant = ' ';
-		term.push_back(a);
-	}
-
-	// remove space behind last value
-	if (!term.empty())
-	{
-		term.pop_back();
-	}
-
-	return any_var;
 }
 
 bool PropertySpecification::ParsePropertyVariableTerm(PropertyVariableTerm& term, StringList const& values_list) const
