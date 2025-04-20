@@ -452,21 +452,21 @@ TEST_CASE("variables.basic")
 
 	// basic variable
 	Element* div = document->GetElementById("div");
-	CHECK(div->GetProperty(PropertyId::BackgroundColor)->ToString() == "rgba(255,255,255,255)");
+	CHECK(div->GetProperty(PropertyId::BackgroundColor)->ToString() == "#ffffff");
 
 	// recursive variable
 	Element* p = document->GetElementById("p");
-	CHECK(p->GetProperty(PropertyId::BackgroundColor)->ToString() == "rgba(255,255,255,255)");
+	CHECK(p->GetProperty(PropertyId::BackgroundColor)->ToString() == "#ffffff");
 
 	// variable fallback
-	CHECK(p->GetProperty(PropertyId::Color)->ToString() == "rgba(255,0,0,255)");
+	CHECK(p->GetProperty(PropertyId::Color)->ToString() == "#ff0000");
 
 	// variable modification
 	div->SetProperty("--color-var", "#000000");
 
 	TestsShell::RenderLoop();
 
-	CHECK(div->GetProperty(PropertyId::BackgroundColor)->ToString() == "rgba(0,0,0,255)");
+	CHECK(div->GetProperty(PropertyId::BackgroundColor)->ToString() == "#000000");
 
 	// inheritance validation
 	CHECK(div->GetProperty("--color-var")->ToString() == "#000000");
@@ -542,13 +542,13 @@ TEST_CASE("variables.datamodel")
 	TestsShell::RenderLoop();
 
 	Element* div = document->GetElementById("div");
-	CHECK(div->GetProperty(PropertyId::BackgroundColor)->ToString() == "rgba(0,0,0,255)");
+	CHECK(div->GetProperty(PropertyId::BackgroundColor)->ToString() == "#000000");
 	bgcolor = "#ffffff";
 	model.GetModelHandle().DirtyVariable("bgcolor");
 
 	TestsShell::RenderLoop();
 
-	CHECK(div->GetProperty(PropertyId::BackgroundColor)->ToString() == "rgba(255,255,255,255)");
+	CHECK(div->GetProperty(PropertyId::BackgroundColor)->ToString() == "#ffffff");
 
 	document->Close();
 
@@ -566,8 +566,8 @@ TEST_CASE("variables.inheritance")
 
 	TestsShell::RenderLoop();
 
-	CHECK(document->GetElementById("p1")->GetProperty(PropertyId::BackgroundColor)->ToString() == "rgba(0,255,0,255)");
-	CHECK(document->GetElementById("p2")->GetProperty(PropertyId::BackgroundColor)->ToString() == "rgba(255,255,255,255)");
+	CHECK(document->GetElementById("p1")->GetProperty(PropertyId::BackgroundColor)->ToString() == "#00ff00");
+	CHECK(document->GetElementById("p2")->GetProperty(PropertyId::BackgroundColor)->ToString() == "#ffffff");
 
 	document->Close();
 
@@ -589,13 +589,13 @@ TEST_CASE("variables.mediaquery")
 
 	TestsShell::RenderLoop();
 
-	CHECK(document->GetElementById("div")->GetProperty(PropertyId::BackgroundColor)->ToString() == "rgba(0,255,0,127)");
+	CHECK(document->GetElementById("div")->GetProperty(PropertyId::BackgroundColor)->ToString() == "#00ff007f");
 
 	context->SetDimensions(Vector2i(600, 320));
 
 	TestsShell::RenderLoop();
 
-	CHECK(document->GetElementById("div")->GetProperty(PropertyId::BackgroundColor)->ToString() == "rgba(255,255,255,127)");
+	CHECK(document->GetElementById("div")->GetProperty(PropertyId::BackgroundColor)->ToString() == "#ffffff7f");
 
 	document->Close();
 
